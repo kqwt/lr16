@@ -3,223 +3,109 @@ package com.example.lr11kotlin.presentation.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.paging.LoadState
-import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.lr11kotlin.domain.model.Post
-import kotlinx.coroutines.flow.Flow
+import com.example.lr11kotlin.presentation.viewmodel.PostListViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostListPagingScreen(
-    postsFlow: Flow<PagingData<Post>>,
-    modifier: Modifier = Modifier
+    viewModel: PostListViewModel
 ) {
+    val posts = viewModel.posts.collectAsLazyPagingItems()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
 
-    val posts = postsFlow.collectAsLazyPagingItems()
-
-    LazyColumn(
-
-        modifier = modifier.fillMaxSize(),
-
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-
-        contentPadding = PaddingValues(16.dp)
-
-    ) {
-
-        when (val refresh = posts.loadState.refresh) {
-
-            is LoadState.Loading -> {
-
-                item {
-
-                    Box(
-
-                        modifier = Modifier
-
-                            .fillMaxWidth()
-
-                            .height(200.dp),
-
-                        contentAlignment = Alignment.Center
-
-                    ) {
-
-                        CircularProgressIndicator()
-
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Posts") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    count = posts.itemCount,
+                    key = { index -> posts[index]?.id ?: index }
+                ) { index ->
+                    posts[index]?.let { post ->
+                        PostItem(post = post)
                     }
-
                 }
-
             }
 
-            is LoadState.Error -> {
-
-                item {
-
-                    ErrorItem(
-
-                        message = refresh.error.message ?: "Ошибка загрузки",
-
-                        onRetry = { posts.retry() }
-
-                    )
-
-                }
-
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
 
-            else -> {}
-
+            error?.let { errorMessage ->
+                ErrorBanner(
+                    message = errorMessage,
+                    onDismiss = { viewModel.clearError() }
+                )
+            }
         }
-
-        items(posts.itemCount) { index ->
-
-            val post = posts[index]
-
-            if (post != null) {
-
-                PostItem(post)
-
-            }
-
-        }
-
-        when (val append = posts.loadState.append) {
-
-            is LoadState.Loading -> {
-
-                item {
-
-                    Box(
-
-                        modifier = Modifier
-
-                            .fillMaxWidth()
-
-                            .padding(16.dp),
-
-                        contentAlignment = Alignment.Center
-
-                    ) {
-
-                        CircularProgressIndicator()
-
-                    }
-
-                }
-
-            }
-
-            is LoadState.Error -> {
-
-                item {
-
-                    ErrorItem(
-
-                        message = append.error.message ?: "Ошибка",
-
-                        onRetry = { posts.retry() }
-
-                    )
-
-                }
-
-            }
-
-            else -> {}
-
-        }
-
     }
-
 }
 
 @Composable
 private fun PostItem(post: Post) {
-
     Card(
-
         modifier = Modifier.fillMaxWidth(),
-
-        colors = CardDefaults.cardColors(
-
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-
-        )
-
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-
-        Column(Modifier.padding(16.dp)) {
-
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
             Text(
-
                 text = post.title,
-
-                fontWeight = FontWeight.Bold,
-
-                style = MaterialTheme.typography.titleMedium
-
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
             Text(
-
                 text = post.body,
-
-                style = MaterialTheme.typography.bodySmall
-
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
         }
-
     }
-
 }
 
 @Composable
-private fun ErrorItem(
-
+private fun ErrorBanner(
     message: String,
-
-    onRetry: () -> Unit
-
+    onDismiss: () -> Unit
 ) {
-
-    Column(
-
+    Snackbar(
         modifier = Modifier
-
             .fillMaxWidth()
-
-            .padding(16.dp),
-
-        horizontalAlignment = Alignment.CenterHorizontally
-
-    ) {
-
-        Text(
-
-            text = message,
-
-            color = MaterialTheme.colorScheme.error
-
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(onClick = onRetry) {
-
-            Text("Повторить")
-
+            .padding(8.dp),
+        action = {
+            TextButton(onClick = onDismiss) {
+                Text("OK")
+            }
         }
-
+    ) {
+        Text(text = message)
     }
-
 }
