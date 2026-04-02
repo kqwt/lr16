@@ -4,12 +4,12 @@ import com.example.lr11kotlin.data.remote.dto.PostDto
 import com.example.lr11kotlin.domain.model.Post
 
 class PostMapper {
-    fun PostDto.toDomain(): Post {
+    fun toDomain(dto: PostDto): Post {
         return Post(
-            id = this.id,
-            title = this.title,
-            body = this.body,
-            userId = this.userId
+            id = dto.id,
+            title = dto.title,
+            body = dto.body,
+            userId = dto.userId
         )
     }
 }

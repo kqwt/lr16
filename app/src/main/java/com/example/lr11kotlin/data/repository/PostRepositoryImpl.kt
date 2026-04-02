@@ -29,7 +29,7 @@ class PostRepositoryImpl(
 
             pagingSourceFactory = {
 
-                PostPagingSource(postApi)
+                PostPagingSource(postApi, postMapper)
 
             }
 

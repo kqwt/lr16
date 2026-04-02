@@ -3,12 +3,13 @@ package com.example.lr11kotlin.data.remote
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.example.lr11kotlin.data.remote.api.PostApi
-import com.example.lr11kotlin.data.remote.mapper.toDomain
+import com.example.lr11kotlin.data.remote.mapper.PostMapper
 import com.example.lr11kotlin.domain.model.Post
 
 class PostPagingSource(
 
-    private val api: PostApi
+    private val api: PostApi,
+    private val mapper: PostMapper
 
 ) : PagingSource<Int, Post>() {
 
@@ -27,7 +28,7 @@ class PostPagingSource(
 
             LoadResult.Page(
 
-                data = response.map { it.toDomain() },
+                data = response.map { mapper.toDomain(it) },
 
                 prevKey = if (page == 1) null else page - 1,
 
