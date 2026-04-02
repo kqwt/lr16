@@ -2,6 +2,7 @@ package com.example.lr11kotlin.di
 
 import com.example.lr11kotlin.data.remote.api.PostApi
 import com.example.lr11kotlin.data.remote.mapper.PostMapper
+import com.example.lr11kotlin.di.qualifier.BaseUrl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,9 +41,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideRetrofit(
+        okHttpClient: OkHttpClient,
+        @BaseUrl baseUrl: String
+    ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://jsonplaceholder.typicode.com/")
+            .baseUrl(baseUrl)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
